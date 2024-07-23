@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete element from project &apos;AI_Diary&apos;&#x0A;- Original project: &apos;AI_Diary&apos;&#x0A;- Original element: &apos;AI_Diary/src/main/java/com.example.AI_Diary.model&apos;" description="Delete element" element1="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.example.AI_Diary.model" elements="1" flags="589830" id="org.eclipse.jdt.ui.delete" resources="0" stamp="1721654479009" subPackages="false" version="1.0"/>
+</session>
