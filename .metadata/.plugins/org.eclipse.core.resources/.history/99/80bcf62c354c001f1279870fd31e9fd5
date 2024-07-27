@@ -1,0 +1,5 @@
+package com.example.AI_Diary.config;
+
+public class RestTemplateConfig {
+
+}

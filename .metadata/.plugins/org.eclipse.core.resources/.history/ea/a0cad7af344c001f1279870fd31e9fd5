@@ -1,0 +1,70 @@
+package com.example.AI_Diary.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.example.AI_Diary.model.Diary;
+import com.example.AI_Diary.model.User;
+import com.example.AI_Diary.service.DiaryService;
+import com.example.AI_Diary.service.SentimentAnalysisService;
+import com.example.AI_Diary.service.UserService;
+import com.example.AI_Diary.util.JwtTokenUtil;
+
+@RestController
+@RequestMapping("/api/diaries")
+@CrossOrigin(origins = "http://localhost:3000")
+public class DiaryController {
+
+    @Autowired
+    private DiaryService diaryService;
+
+    @Autowired
+    private SentimentAnalysisService sentimentAnalysisService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @PostMapping
+    public ResponseEntity<Diary> createDiary(@RequestBody Diary diary, @RequestHeader("Authorization") String token) {
+        String jwtToken = token.substring(7); // Bearer 토큰 제거
+        String usernameOrEmail = jwtTokenUtil.getUsernameFromToken(jwtToken);
+        User user = userService.findByUsernameOrEmail(usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        diary.setUserId(user.getId());
+
+        // 감정 분석 및 저장
+        String emotion = sentimentAnalysisService.analyzeSentiment(diary.getContent());
+        diary.setEmotion(emotion);
+
+        return ResponseEntity.ok(diaryService.saveDiary(diary));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Diary>> getDiaries(@RequestHeader("Authorization") String token) {
+        String jwtToken = token.substring(7); // Bearer 토큰 제거
+        String usernameOrEmail = jwtTokenUtil.getUsernameFromToken(jwtToken);
+        User user = userService.findByUsernameOrEmail(usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        List<Diary> diaries = diaryService.findByUserId(user.getId());
+        return ResponseEntity.ok(diaries);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Diary> getDiaryById(@PathVariable Long id) {
+        return diaryService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDiary(@PathVariable Long id) {
+        diaryService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+}

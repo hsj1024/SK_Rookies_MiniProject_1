@@ -1,0 +1,5 @@
+package com.example.AI_Diary.exception;
+
+public class CustomExceptionHandler {
+
+}
