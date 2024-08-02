@@ -1,0 +1,11 @@
+package com.example.AI_Diary.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.AI_Diary.model.Diary;
+
+public interface DiaryRepository extends JpaRepository<Diary, Long> {
+    List<Diary> findByUserId(Long userId);
+}

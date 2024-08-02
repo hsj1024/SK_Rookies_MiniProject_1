@@ -1,0 +1,49 @@
+package com.example.AI_Diary.util;
+
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+//JwtTokenUtil.java
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+
+@Component
+public class JwtTokenUtil {
+ 
+ @Value("${jwt.secret}")
+ private String secret;
+
+ public String getUsernameFromToken(String token) {
+     Claims claims = Jwts.parser()
+             .setSigningKey(secret)
+             .parseClaimsJws(token)
+             .getBody();
+     return claims.getSubject();
+ }
+
+ public boolean validateToken(String token, UserDetails userDetails) {
+     final String username = getUsernameFromToken(token);
+     return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+ }
+
+ private boolean isTokenExpired(String token) {
+     final Date expiration = getExpirationDateFromToken(token);
+     return expiration.before(new Date());
+ }
+
+ private Date getExpirationDateFromToken(String token) {
+     Claims claims = Jwts.parser()
+             .setSigningKey(secret)
+             .parseClaimsJws(token)
+             .getBody();
+     return claims.getExpiration();
+ }
+
+public String generateJwtToken(String userId) {
+	// TODO Auto-generated method stub
+	return null;
+}
+}

@@ -1,0 +1,186 @@
+.diary-detail-container {
+  width: 800px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  height: 100vh;
+  font-family: "EF_Diary", Arial, sans-serif;
+}
+
+.diary-detail-title {
+  font-size: 2em;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+  font-family: "EF_Diary", Arial, sans-serif;
+}
+
+.diary-content-title {
+  font-size: 1.5em;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.diary-content {
+  font-size: 1.2em;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.diary-tags {
+  font-size: 1em;
+  color: #007bff;
+  margin-bottom: 20px;
+}
+
+.diary-date {
+  font-size: 1em;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.diary-detail-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.diary-detail-list-item {
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #ffffff;
+  border-left: 10px solid #007bff; /* 감정에 따라 변경될 수 있음 */
+  border-radius: 10px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.3s, border-left-color 0.3s;
+}
+
+.diary-detail-list-item:hover {
+  background-color: #e9ecef;
+}
+
+.diary-image {
+  width: 100px;
+  height: 100px;
+  margin-top: 10px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.home-button, .button-container-right button {
+  display: inline-block;
+  margin: 10px;
+  padding: 20px 30px; /* 버튼 크기 줄이기 */
+  font-size: 1em; /* 폰트 크기 줄이기 */
+  width: auto; /* 버튼 너비 자동으로 조정 */
+  height: auto; /* 버튼 높이 자동으로 조정 */
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.home-button:hover, .button-container-right button:hover {
+  background-color: #0056b3;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.button-container-right {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px; /* 버튼 사이의 간격 */
+  margin-top: 20px;
+}
+
+/* 댓글 스타일 */
+.comment-container {
+  margin-top: 20px;
+}
+
+.comment {
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+
+.comment.reply {
+  margin-left: 20px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.comment-author {
+  font-weight: bold;
+}
+
+.comment-date {
+  font-size: 0.8em;
+  color: #888;
+}
+
+.comment-content {
+  margin-bottom: 10px;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.replies {
+  margin-top: 10px;
+}
+
+.tags-input-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  background-color: #f3f3f3;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.tag button {
+  background: none;
+  border: none;
+  color: red;
+  font-size: 12px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.tag button:hover {
+  color: darkred;
+}
+
+.center-button {
+  text-align: center;
+  margin-top: 20px;
+}

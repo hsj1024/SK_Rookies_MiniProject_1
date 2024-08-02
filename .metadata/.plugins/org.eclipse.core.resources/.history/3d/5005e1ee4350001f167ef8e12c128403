@@ -1,0 +1,798 @@
+//package com.example.AI_Diary.controller;
+//
+//import java.io.File;
+//import java.io.IOException;
+//import java.io.InputStream;
+//import java.nio.file.Files;
+//import java.nio.file.Path;
+//import java.nio.file.Paths;
+//import java.nio.file.StandardCopyOption;
+//import java.time.LocalDate;
+//import java.time.LocalDateTime;
+//import java.util.ArrayList;
+//import java.util.Arrays;
+//import java.util.Base64;
+//import java.util.Collections;
+//import java.util.List;
+//import java.util.Optional;
+//import java.util.UUID;
+//import java.util.stream.Collectors;
+//import org.springframework.beans.factory.annotation.Value;
+//
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.format.annotation.DateTimeFormat;
+//import org.springframework.http.HttpHeaders;
+//import org.springframework.http.HttpStatus;
+//import org.springframework.http.MediaType;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.web.bind.annotation.CrossOrigin;
+//import org.springframework.web.bind.annotation.DeleteMapping;
+//import org.springframework.web.bind.annotation.GetMapping;
+//import org.springframework.web.bind.annotation.PathVariable;
+//import org.springframework.web.bind.annotation.PostMapping;
+//import org.springframework.web.bind.annotation.PutMapping;
+//import org.springframework.web.bind.annotation.RequestHeader;
+//import org.springframework.web.bind.annotation.RequestMapping;
+//import org.springframework.web.bind.annotation.RequestParam;
+//import org.springframework.web.bind.annotation.RestController;
+//import org.springframework.web.multipart.MultipartFile;
+//
+//import com.example.AI_Diary.model.Diary;
+//import com.example.AI_Diary.model.User;
+//import com.example.AI_Diary.service.DiaryService;
+//import com.example.AI_Diary.service.SentimentAnalysisService;
+//import com.example.AI_Diary.service.UserService;
+//import com.example.AI_Diary.util.JwtTokenUtil;
+//import com.fasterxml.jackson.core.type.TypeReference;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import org.springframework.http.ContentDisposition;
+//import net.coobird.thumbnailator.Thumbnails;
+//
+//
+//@RestController
+//@RequestMapping("/api/diaries")
+//@CrossOrigin(origins = "http://localhost:3000")
+//public class DiaryController {
+//
+//    private static final Logger logger = LoggerFactory.getLogger(DiaryController.class);
+//
+//    @Autowired
+//    private DiaryService diaryService;
+//
+//    @Autowired
+//    private SentimentAnalysisService sentimentAnalysisService;
+//
+//    @Autowired
+//    private UserService userService;
+//
+//    @Autowired
+//    private JwtTokenUtil jwtTokenUtil;
+//    
+//    @Value("${file.upload-dir}")
+//    private String uploadDir;
+//    
+//    @PostMapping
+//    public ResponseEntity<Diary> createDiary(
+//            @RequestParam("title") String title,
+//            @RequestParam("content") String content,
+//            @RequestParam(value = "images", required = false) List<MultipartFile> images,
+//            @RequestParam(value = "tags", required = false) String tagsJson,
+//            @RequestParam("createdAt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdAt,
+//            @RequestHeader("Authorization") String token) {
+//        try {
+//            String jwtToken = token.substring(7);
+//            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+//            User user = userService.findByUserId(userId)
+//                    .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//            List<String> tags = tagsJson != null ? Arrays.asList(new ObjectMapper().readValue(tagsJson, String[].class)) : null;
+//
+//            Diary diary = new Diary();
+//            diary.setTitle(title);
+//            diary.setContent(content);
+//            diary.setUserId(user.getId());
+//            diary.setCreatedAt(createdAt);
+//            diary.setTags(tags);
+//
+//            if (images != null && !images.isEmpty()) {
+//                List<String> imagePaths = new ArrayList<>();
+//                for (MultipartFile imageFile : images) {
+//                    if (!imageFile.isEmpty()) {
+//                        String imagePath = saveImage(imageFile);
+//                        imagePaths.add(imagePath);
+//                    }
+//                }
+//                diary.setImagePaths(imagePaths);
+//            }
+//            String emotion = sentimentAnalysisService.analyzeSentiment(diary.getContent());
+//            diary.setEmotion(emotion);
+//
+//            return ResponseEntity.ok(diaryService.saveDiary(diary));
+//        } catch (Exception e) {
+//            logger.error("Diary creation failed", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//        }
+//    }
+//
+//    private String saveImage(MultipartFile file) {
+//        String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+//        Path uploadPath = Paths.get(uploadDir, filename);
+//
+//        try {
+//            Files.createDirectories(uploadPath.getParent());
+//            file.transferTo(uploadPath.toFile());
+//            return filename; // uploadDir을 포함하지 않은 경로 반환
+//        } catch (IOException e) {
+//            logger.error("Error saving image", e);
+//            return null;
+//        }
+//    }
+//
+//
+//
+////    private String encodeImageToBase64(String imagePath) {
+////        logger.info("Upload directory: " + uploadDir);
+////        logger.info("Original image path: " + imagePath);
+////        
+////        // imagePath가 이미 uploadDir을 포함하지 않도록 수정
+////        Path path = Paths.get(uploadDir).resolve(imagePath).normalize();
+////        logger.info("Normalized path: " + path.toString());
+////        
+////        try {
+////            byte[] imageBytes = Files.readAllBytes(path);
+////            return Base64.getEncoder().encodeToString(imageBytes);
+////        } catch (IOException e) {
+////            logger.error("Error encoding image to Base64", e);
+////            return null;
+////        }
+////    }
+//
+//
+//    @GetMapping
+//    public ResponseEntity<List<Diary>> getDiaries(@RequestHeader("Authorization") String token) {
+//        String jwtToken = token.substring(7); // Bearer 토큰 제거
+//        String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+//        User user = userService.findByUserId(userId)
+//                .orElseThrow(() -> new RuntimeException("User not found"));
+//        List<Diary> diaries = diaryService.findByUserId(user.getId());
+//
+//        return ResponseEntity.ok(diaries);
+//    }
+//
+//
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Diary> getDiaryById(@PathVariable Long id) {
+//        return diaryService.findById(id)
+//                .map(diary -> ResponseEntity.ok(diary))
+//                .orElse(ResponseEntity.notFound().build());
+//    }
+//
+//    @GetMapping("/date/{date}")
+//    public ResponseEntity<List<Diary>> getDiariesByDate(
+//            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+//            @RequestHeader("Authorization") String token) {
+//
+//        String jwtToken = token.substring(7); // Bearer 토큰 제거
+//        String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+//        User user = userService.findByUserId(userId)
+//                .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//        LocalDateTime startOfDay = date.atStartOfDay();
+//        LocalDateTime endOfDay = startOfDay.plusDays(1).minusSeconds(1);
+//
+//        List<Diary> diaries = diaryService.findByUserIdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay);
+//
+//        return ResponseEntity.ok(diaries);
+//    }
+//
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<Void> deleteDiary(@PathVariable Long id, @RequestHeader("Authorization") String token) {
+//        try {
+//            String jwtToken = token.substring(7); // Bearer 토큰 제거
+//            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+//            User user = userService.findByUserId(userId)
+//                    .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//            Optional<Diary> diaryOpt = diaryService.findById(id);
+//            if (diaryOpt.isEmpty()) {
+//                logger.warn("Diary not found: {}", id);
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+//            }
+//
+//            Diary diary = diaryOpt.get();
+//
+//            if (!diary.getUserId().equals(user.getId())) {
+//                logger.warn("User {} tried to delete diary {} without permission", userId, id);
+//                return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 삭제 권한이 없는 경우
+//            }
+//
+//            diaryService.deleteCommentsByDiaryId(id); // 일기의 모든 댓글 삭제
+//            diaryService.deleteById(id); // 일기 삭제
+//
+//            return ResponseEntity.noContent().build();
+//        } catch (Exception e) {
+//            logger.error("Diary deletion failed", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+//    }
+//
+////    @PutMapping("/{id}")
+////    public ResponseEntity<Diary> updateDiary(
+////            @PathVariable Long id,
+////            @RequestParam("title") String title,
+////            @RequestParam("content") String content,
+////            @RequestParam(value = "images", required = false) List<MultipartFile> images,
+////            @RequestParam("tags") String tags,
+////            @RequestParam("createdAt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdAt,
+////            @RequestHeader("Authorization") String token) {
+////        try {
+////            String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+////            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+////            User user = userService.findByUserId(userId)
+////                    .orElseThrow(() -> new RuntimeException("User not found"));
+////
+////            Diary diary = diaryService.findById(id)
+////                    .orElseThrow(() -> new RuntimeException("Diary not found"));
+////
+////            if (!diary.getUserId().equals(user.getId())) {
+////                return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 수정 권한이 없는 경우
+////            }
+////
+////            diary.setTitle(title);
+////            diary.setContent(content);
+////            diary.setTags(new ObjectMapper().readValue(tags, new TypeReference<List<String>>() {}));
+////            diary.setCreatedAt(createdAt); // 수정된 날짜 설정
+////
+////            if (images != null && !images.isEmpty()) {
+////                List<String> imagePaths = new ArrayList<>();
+////                for (MultipartFile imageFile : images) {
+////                    if (imageFile != null && !imageFile.isEmpty()) {
+////                        String imagePath = saveImage(imageFile);
+////                        imagePaths.add(imagePath);
+////                    }
+////                }
+////                diary.setImagePaths(imagePaths);
+////            }
+////
+////            // 감정 분석 및 저장
+////            String emotion = sentimentAnalysisService.analyzeSentiment(diary.getContent());
+////            diary.setEmotion(emotion);
+////
+////            // 일기 저장
+////            Diary savedDiary = diaryService.saveDiary(diary);
+////
+////            // 이미지 Base64 인코딩
+////            if (savedDiary.getImagePaths() != null && !savedDiary.getImagePaths().isEmpty()) {
+////                List<String> base64Images = savedDiary.getImagePaths().stream()
+////                        .map(this::encodeImageToBase64)
+////                        .collect(Collectors.toList());
+////                savedDiary.setBase64Images(base64Images);
+////            }
+////
+////            return ResponseEntity.ok(savedDiary);
+////        } catch (Exception e) {
+////            logger.error("Diary update failed", e);
+////            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+////        }
+////    }
+//    @PutMapping("/{id}")
+//    public ResponseEntity<Diary> updateDiary(
+//            @PathVariable Long id,
+//            @RequestParam("title") String title,
+//            @RequestParam("content") String content,
+//            @RequestParam(value = "images", required = false) List<MultipartFile> images,
+//            @RequestParam("tags") String tags,
+//            @RequestParam("createdAt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdAt,
+//            @RequestParam(value = "existingImages", required = false) List<String> existingImages, // 수정된 부분
+//            @RequestHeader("Authorization") String token) {
+//        try {
+//            String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+//            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+//            User user = userService.findByUserId(userId)
+//                    .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//            Diary diary = diaryService.findById(id)
+//                    .orElseThrow(() -> new RuntimeException("Diary not found"));
+//
+//            if (!diary.getUserId().equals(user.getId())) {
+//                return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 수정 권한이 없는 경우
+//            }
+//
+//            // 기존 이미지 삭제
+//            if (existingImages != null) {
+//                deleteOldImages(existingImages);
+//            }
+//
+//            diary.setTitle(title);
+//            diary.setContent(content);
+//            diary.setTags(new ObjectMapper().readValue(tags, new TypeReference<List<String>>() {}));
+//            diary.setCreatedAt(createdAt);
+//
+//            if (images != null && !images.isEmpty()) {
+//                List<String> imagePaths = new ArrayList<>();
+//                for (MultipartFile imageFile : images) {
+//                    if (imageFile != null && !imageFile.isEmpty()) {
+//                        String imagePath = saveImage(imageFile);
+//                        imagePaths.add(imagePath);
+//                    }
+//                }
+//                diary.setImagePaths(imagePaths);
+//            }
+//
+//            // 감정 분석 및 저장
+//            String emotion = sentimentAnalysisService.analyzeSentiment(diary.getContent());
+//            diary.setEmotion(emotion);
+//
+//            // 일기 저장
+//            Diary savedDiary = diaryService.saveDiary(diary);
+//
+//            return ResponseEntity.ok(savedDiary);
+//        } catch (Exception e) {
+//            logger.error("Diary update failed", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//        }
+//    }
+//
+//    @GetMapping("/image/{id}/{imageIndex}")
+//    public ResponseEntity<byte[]> getImage(@PathVariable Long id, @PathVariable int imageIndex) {
+//        try {
+//            Diary diary = diaryService.findById(id)
+//                    .orElseThrow(() -> new RuntimeException("Diary not found"));
+//
+//            if (diary.getImagePaths() == null || diary.getImagePaths().size() <= imageIndex) {
+//                return ResponseEntity.notFound().build();
+//            }
+//
+//            String imagePath = diary.getImagePaths().get(imageIndex);
+//            Path path = Paths.get(uploadDir, imagePath);
+//            byte[] imageBytes = Files.readAllBytes(path);
+//
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentDisposition(ContentDisposition.builder("inline")
+//                    .filename("image" + imageIndex + ".jpg")
+//                    .build());
+//            headers.setContentType(MediaType.IMAGE_JPEG);
+//
+//            return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
+//        } catch (Exception e) {
+//            logger.error("Failed to get image", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//        }
+//    }
+//    private void deleteOldImages(List<String> imagePaths) {
+//        for (String imagePath : imagePaths) {
+//            Path path = Paths.get(imagePath);
+//            try {
+//                Files.deleteIfExists(path);
+//            } catch (IOException e) {
+//                throw new RuntimeException("Failed to delete old image file", e);
+//            }
+//        }
+//    }
+//
+//    @GetMapping("/search")
+//    public ResponseEntity<List<Diary>> searchDiariesByTag(@RequestParam String tag, @RequestHeader("Authorization") String token) {
+//        try {
+//            String jwtToken = token.substring(7); // Bearer 토큰 제거
+//            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+//            User user = userService.findByUserId(userId)
+//                    .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//            logger.info("Searching diaries for user: " + user.getId() + " with tag: " + tag);
+//
+//            List<Diary> diaries = diaryService.findByUserIdAndTag(user.getId(), tag);
+//
+//            // 디버깅을 위한 로그 추가
+//            logger.info("Found diaries: " + diaries.size());
+//
+//            return ResponseEntity.ok(diaries);
+//        } catch (Exception e) {
+//            logger.error("Search diaries by tag failed", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonList(new Diary("Error: " + e.getMessage())));
+//        }
+//    }
+//}
+package com.example.AI_Diary.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.AI_Diary.model.Diary;
+import com.example.AI_Diary.model.User;
+import com.example.AI_Diary.service.DiaryService;
+import com.example.AI_Diary.service.SentimentAnalysisService;
+import com.example.AI_Diary.service.UserService;
+import com.example.AI_Diary.util.JwtTokenUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@RestController
+@RequestMapping("/api/diaries")
+@CrossOrigin(origins = "http://localhost:3000")
+public class DiaryController {
+
+    private static final Logger logger = LoggerFactory.getLogger(DiaryController.class);
+
+    @Autowired
+    private DiaryService diaryService;
+
+    @Autowired
+    private SentimentAnalysisService sentimentAnalysisService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+    
+    @Value("${file.upload-dir}")
+    private String uploadDir;
+    
+    @PostMapping
+    public ResponseEntity<Diary> createDiary(
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images,
+            @RequestParam(value = "tags", required = false) String tagsJson,
+            @RequestParam("createdAt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdAt,
+            @RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.substring(7);
+            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+            User user = userService.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            List<String> tags = tagsJson != null ? Arrays.asList(new ObjectMapper().readValue(tagsJson, String[].class)) : null;
+
+            Diary diary = new Diary();
+            diary.setTitle(title);
+            diary.setContent(content);
+            diary.setUserId(user.getId());
+            diary.setCreatedAt(createdAt);
+            diary.setTags(tags);
+
+            if (images != null && !images.isEmpty()) {
+                List<String> imagePaths = new ArrayList<>();
+                for (MultipartFile imageFile : images) {
+                    if (!imageFile.isEmpty()) {
+                        String imagePath = saveImage(imageFile);
+                        imagePaths.add(imagePath);
+                    }
+                }
+                diary.setImagePaths(imagePaths);
+            }
+            String emotion = sentimentAnalysisService.analyzeSentiment(diary.getContent());
+            diary.setEmotion(emotion);
+
+            Diary savedDiary = diaryService.saveDiary(diary);
+
+            // Base64 인코딩
+            if (savedDiary.getImagePaths() != null && !savedDiary.getImagePaths().isEmpty()) {
+                List<String> base64Images = savedDiary.getImagePaths().stream()
+                        .map(this::encodeImageToBase64)
+                        .collect(Collectors.toList());
+                savedDiary.setBase64Images(base64Images);
+            }
+
+            return ResponseEntity.ok(savedDiary);
+        } catch (Exception e) {
+            logger.error("Diary creation failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
+    private String encodeImageToBase64(String imagePath) {
+        try {
+            Path path = Paths.get(uploadDir, imagePath);
+            byte[] imageBytes = Files.readAllBytes(path);
+            return Base64.getEncoder().encodeToString(imageBytes);
+        } catch (IOException e) {
+            logger.error("Error encoding image to Base64", e);
+            return null;
+        }
+    }
+
+    private String saveImage(MultipartFile file) {
+        String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path uploadPath = Paths.get(uploadDir, filename);
+
+        try {
+            Files.createDirectories(uploadPath.getParent());
+            file.transferTo(uploadPath.toFile());
+            return filename; // uploadDir을 포함하지 않은 경로 반환
+        } catch (IOException e) {
+            logger.error("Error saving image", e);
+            return null;
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Diary>> getDiaries(@RequestHeader("Authorization") String token) {
+        String jwtToken = token.substring(7);
+        String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+        User user = userService.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        List<Diary> diaries = diaryService.findByUserId(user.getId());
+
+        List<Diary> encodedDiaries = diaries.stream().map(diary -> {
+            if (diary.getImagePaths() != null && !diary.getImagePaths().isEmpty()) {
+                List<String> base64Images = diary.getImagePaths().stream()
+                        .map(this::encodeImageToBase64)
+                        .collect(Collectors.toList());
+                diary.setBase64Images(base64Images);
+            }
+            return diary;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(encodedDiaries);
+    }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Diary> getDiaryById(@PathVariable Long id) {
+        return diaryService.findById(id)
+                .map(diary -> {
+                    if (diary.getImages() != null && !diary.getImages().isEmpty()) {
+                        List<String> base64Images = diary.getImages().stream()
+                                .map(imageBytes -> Base64.getEncoder().encodeToString(imageBytes))
+                                .collect(Collectors.toList());
+                        diary.setBase64Images(base64Images);
+                    }
+                    return ResponseEntity.ok(diary);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
+
+    @GetMapping("/date/{date}")
+    public ResponseEntity<List<Diary>> getDiariesByDate(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestHeader("Authorization") String token) {
+
+        String jwtToken = token.substring(7); // Bearer 토큰 제거
+        String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+        User user = userService.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusSeconds(1);
+
+        List<Diary> diaries = diaryService.findByUserIdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay);
+
+        // 이미지 Base64 인코딩
+        List<Diary> encodedDiaries = diaries.stream().map(diary -> {
+            if (diary.getImages() != null && !diary.getImages().isEmpty()) {
+                List<String> base64Images = diary.getImages().stream()
+                        .map(imageBytes -> Base64.getEncoder().encodeToString(imageBytes))
+                        .collect(Collectors.toList());
+                diary.setBase64Images(base64Images);
+            }
+            return diary;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(encodedDiaries);
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDiary(@PathVariable Long id, @RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.substring(7); // Bearer 토큰 제거
+            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+            User user = userService.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            Optional<Diary> diaryOpt = diaryService.findById(id);
+            if (diaryOpt.isEmpty()) {
+                logger.warn("Diary not found: {}", id);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            Diary diary = diaryOpt.get();
+
+            if (!diary.getUserId().equals(user.getId())) {
+                logger.warn("User {} tried to delete diary {} without permission", userId, id);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 삭제 권한이 없는 경우
+            }
+
+            diaryService.deleteCommentsByDiaryId(id); // 일기의 모든 댓글 삭제
+            diaryService.deleteById(id); // 일기 삭제
+
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            logger.error("Diary deletion failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Diary> updateDiary(
+            @PathVariable Long id,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images,
+            @RequestParam("tags") String tags,
+            @RequestParam("createdAt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdAt,
+            @RequestParam(value = "existingImages", required = false) List<String> existingImages, // 수정된 부분
+            @RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+            User user = userService.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            Diary diary = diaryService.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Diary not found"));
+
+            if (!diary.getUserId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 수정 권한이 없는 경우
+            }
+
+            // 기존 이미지 삭제
+            if (existingImages != null) {
+                deleteOldImages(existingImages);
+            }
+
+            diary.setTitle(title);
+            diary.setContent(content);
+            diary.setTags(new ObjectMapper().readValue(tags, new TypeReference<List<String>>() {}));
+            diary.setCreatedAt(createdAt);
+
+            if (images != null && !images.isEmpty()) {
+                List<String> imagePaths = new ArrayList<>();
+                for (MultipartFile imageFile : images) {
+                    if (imageFile != null && !imageFile.isEmpty()) {
+                        String imagePath = saveImage(imageFile);
+                        imagePaths.add(imagePath);
+                    }
+                }
+                diary.setImagePaths(imagePaths);
+            }
+
+            // 감정 분석 및 저장
+            String emotion = sentimentAnalysisService.analyzeSentiment(diary.getContent());
+            diary.setEmotion(emotion);
+
+            // 일기 저장
+            Diary savedDiary = diaryService.saveDiary(diary);
+
+            return ResponseEntity.ok(savedDiary);
+        } catch (Exception e) {
+            logger.error("Diary update failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+    @GetMapping("/image/{id}/{imageIndex}")
+    public ResponseEntity<byte[]> getImage(
+            @PathVariable Long id,
+            @PathVariable int imageIndex,
+            @RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.substring(7);
+            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+            User user = userService.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            Diary diary = diaryService.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Diary not found"));
+
+            if (!diary.getUserId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 접근 권한이 없는 경우
+            }
+
+            if (diary.getImagePaths() == null || diary.getImagePaths().size() <= imageIndex) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String imagePath = diary.getImagePaths().get(imageIndex);
+            Path path = Paths.get(uploadDir, imagePath); // 여기에 uploadDir 추가
+            byte[] imageBytes = Files.readAllBytes(path);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentDisposition(ContentDisposition.builder("inline")
+                    .filename(imagePath)
+                    .build());
+            headers.setContentType(MediaType.IMAGE_JPEG);
+
+            return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Failed to get image", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    private void deleteOldImages(List<String> imagePaths) {
+        for (String imagePath : imagePaths) {
+            Path path = Paths.get(uploadDir, imagePath);
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException e) {
+                logger.error("Failed to delete old image file", e);
+            }
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Diary>> searchDiariesByTag(@RequestParam String tag, @RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.substring(7); // Bearer 토큰 제거
+            String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+            User user = userService.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            logger.info("Searching diaries for user: " + user.getId() + " with tag: " + tag);
+
+            List<Diary> diaries = diaryService.findByUserIdAndTag(user.getId(), tag);
+
+            // 디버깅을 위한 로그 추가
+            logger.info("Found diaries: " + diaries.size());
+
+            return ResponseEntity.ok(diaries);
+        } catch (Exception e) {
+            logger.error("Search diaries by tag failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonList(new Diary("Error: " + e.getMessage())));
+        }
+    }
+    
+    @PostMapping("/api/diaries/upload/{id}")
+    public ResponseEntity<?> uploadImage(@PathVariable Long id, @RequestParam("image") MultipartFile file) {
+        try {
+            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            File targetFile = new File("/path/to/save/" + fileName);
+            file.transferTo(targetFile);
+
+            // Save the path to the database (or other storage)
+            String imagePath = "/path/to/images/" + fileName;
+            Diary diary = diaryService.findById(id).orElseThrow(() -> new ResourceNotFoundException("Diary not found"));
+            diary.getImagePaths().add(imagePath);
+            diaryService.saveDiary(diary);
+
+            return ResponseEntity.ok(new UploadResponse(imagePath));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed");
+        }
+    }
+
+
+
+}

@@ -1,0 +1,70 @@
+package com.example.AI_Diary.service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.AI_Diary.model.Comment;
+import com.example.AI_Diary.model.Diary;
+import com.example.AI_Diary.repository.CommentRepository;
+import com.example.AI_Diary.repository.DiaryRepository;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class DiaryService {
+
+    @Autowired
+    private DiaryRepository diaryRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+//    public Diary saveDiary(Diary diary) {
+//        diary.setCreatedAt(LocalDateTime.now());
+//        return diaryRepository.save(diary);
+//    }
+    public Diary saveDiary(String title, String content, String emotion, String image, String userId, Date createdAt) {
+        Diary diary = new Diary();
+        diary.setTitle(title);
+        diary.setContent(content);
+        diary.setEmotion(emotion);
+        diary.setImage(image);
+        diary.setUserId(userId);
+        diary.setCreatedAt(createdAt); // 수동으로 날짜 설정
+        
+        return diaryRepository.save(diary);
+    }
+
+    public List<Diary> findByUserId(Long userId) {
+        return diaryRepository.findByUserId(userId);
+    }
+
+    public List<Diary> findByUserIdAndCreatedAtBetween(Long userId, LocalDateTime start, LocalDateTime end) {
+        return diaryRepository.findByUserIdAndCreatedAtBetween(userId, start, end);
+    }
+
+    public List<Diary> findByUserIdAndTag(Long userId, String tag) {
+        return diaryRepository.findByUserIdAndTag(userId, tag);
+    }
+
+    public List<Comment> findCommentsByDiaryId(Long diaryId) {
+        return commentRepository.findByDiaryId(diaryId);
+    }
+    @Transactional
+
+    public void deleteCommentsByDiaryId(Long diaryId) {
+        commentRepository.deleteByDiaryId(diaryId);
+    }
+
+    public void deleteById(Long id) {
+        diaryRepository.deleteById(id);
+    }
+
+    public Optional<Diary> findById(Long id) {
+        return diaryRepository.findById(id);
+    }
+}

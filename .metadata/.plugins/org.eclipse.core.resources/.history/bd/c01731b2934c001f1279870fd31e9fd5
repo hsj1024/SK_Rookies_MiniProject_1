@@ -1,0 +1,126 @@
+package com.example.AI_Diary.controller;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.AI_Diary.model.User;
+import com.example.AI_Diary.service.UserService;
+import com.example.AI_Diary.util.JwtTokenUtil;
+
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:3000")
+public class AuthController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @PostMapping("/signup")
+    public ResponseEntity<User> signup(@RequestBody User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        User savedUser = userService.saveUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User user) {
+        String usernameOrEmail = user.getUsername(); // 아이디 또는 이메일 입력 받음
+        Optional<User> existingUser = userService.findByUsernameOrEmail(usernameOrEmail);
+
+        if (existingUser.isPresent()) {
+            User foundUser = existingUser.get();
+            if (passwordEncoder.matches(user.getPassword(), foundUser.getPassword())) {
+                String token = jwtTokenUtil.generateJwtToken(foundUser.getUsername());
+                return ResponseEntity.ok(new AuthResponse(token));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자를 찾을 수 없습니다.");
+        }
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자 인증이 필요합니다.");
+        }
+        User user = userService.findByUsernameOrEmail(userDetails.getUsername()).orElse(null);
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+    }
+
+    @PostMapping("/find-username")
+    public ResponseEntity<String> findUsernameByEmail(@RequestParam String email) {
+        String username = userService.findUsernameByEmail(email);
+        if (username != null) {
+            userService.sendEmail(email, "Your Username", "Your username is: " + username);
+            return ResponseEntity.ok("Username sent to your email.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found.");
+        }
+    }
+
+    @PostMapping("/reset-password-request")
+    public ResponseEntity<String> resetPasswordRequest(@RequestParam String email) {
+        Optional<User> user = userService.findByEmail(email);
+        if (user.isPresent()) {
+            String token = UUID.randomUUID().toString();
+            // Save the token in the database or cache with an expiration time
+            String resetLink = "http://localhost:3000/reset-password?token=" + token;
+            userService.sendEmail(email, "Reset Password", "To reset your password, click the link below:\n" + resetLink);
+            return ResponseEntity.ok("Reset password link sent to your email.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found.");
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+        // Validate the token and get the user associated with it
+        Optional<User> user = userService.validatePasswordResetToken(token);
+        if (user.isPresent()) {
+            User foundUser = user.get();
+            foundUser.setPassword(passwordEncoder.encode(newPassword));
+            userService.saveUser(foundUser);
+            return ResponseEntity.ok("Password successfully reset.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid token.");
+        }
+    }
+
+    private static class AuthResponse {
+        private String token;
+
+        public AuthResponse(String token) {
+            this.token = token;
+        }
+
+        public String getToken() {
+            return token;
+        }
+    }
+}

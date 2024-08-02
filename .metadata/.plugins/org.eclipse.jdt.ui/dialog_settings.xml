@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="completion_proposal_size">
+		<item key="contextSelector.size.x" value="315"/>
+		<item key="contextSelector.size.y" value="165"/>
 	</section>
 	<section name="quick_assist_proposal_size">
 	</section>

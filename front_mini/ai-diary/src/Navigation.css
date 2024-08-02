@@ -1,0 +1,35 @@
+/* Navigation.css */
+.navigation {
+    width: 100%;
+    background-color: #333;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .logo {
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    font-family: "EF_Diary", Arial, sans-serif;
+  }
+  
+  .nav-links {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+  }
+  
+  .nav-links li {
+    color: white;
+    cursor: pointer;
+    font-family: "EF_Diary", Arial, sans-serif;
+    transition: color 0.3s ease;
+  }
+  
+  .nav-links li:hover {
+    color: #f0e68c;
+  }
+  

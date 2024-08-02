@@ -1,0 +1,181 @@
+package com.example.AI_Diary.controller;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.AI_Diary.model.User;
+import com.example.AI_Diary.service.UserService;
+import com.example.AI_Diary.util.JwtTokenUtil;
+
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:3000")
+public class AuthController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody User user) {
+        try {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            User savedUser = userService.saveUser(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        } catch (DataIntegrityViolationException e) {
+            String errorMessage = e.getMessage();
+
+            if (errorMessage.contains("Email")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("중복된 이메일입니다.");
+            } else if (errorMessage.contains("User ID")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("중복된 사용자 ID입니다.");
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원가입 중 문제가 발생했습니다.");
+            }
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User user) {
+        String userIdOrEmail = user.getUserId(); // 사용자 ID 또는 이메일 입력 받음
+        Optional<User> existingUser = userService.findByUserIdOrEmail(userIdOrEmail);
+
+        if (existingUser.isPresent()) {
+            User foundUser = existingUser.get();
+            if (passwordEncoder.matches(user.getPassword(), foundUser.getPassword())) {
+                String token = jwtTokenUtil.generateJwtToken(foundUser.getUserId());
+                return ResponseEntity.ok(new AuthResponse(token, foundUser.getUserId()));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자를 찾을 수 없습니다.");
+        }
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자 인증이 필요합니다.");
+        }
+        User user = userService.findByUserIdOrEmail(userDetails.getUsername()).orElse(null);
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+    }
+
+    @PostMapping("/find-username")
+    public ResponseEntity<?> findUsername(@RequestBody FindUsernameRequest request) {
+        Optional<User> user = userService.findByUserIdOrEmail(request.getEmail());
+        if (user.isPresent()) {
+            return ResponseEntity.ok("당신의 아이디는: " + user.get().getUserId());
+        } else {
+            // 이메일로 인증 메일 보내기
+            userService.sendEmail(request.getEmail(), "아이디 찾기", "아이디를 찾을 수 없습니다. 고객센터로 문의하세요.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("아이디를 찾을 수 없습니다. 이메일로 안내 메일을 발송했습니다.");
+        }
+    }
+
+    @PostMapping("/find-password")
+    public ResponseEntity<?> findPassword(@RequestBody FindPasswordRequest request) {
+        Optional<User> user = userService.findByUserIdOrEmail(request.getUserId());
+        if (user.isPresent() && user.get().getEmail().equals(request.getEmail()) && user.get().getName().equals(request.getName())) {
+            // 이메일로 인증 메일 보내기
+            userService.sendEmail(request.getEmail(), "비밀번호 찾기", "비밀번호 재설정 링크: <링크>");
+            return ResponseEntity.ok("비밀번호 재설정 링크를 이메일로 발송했습니다.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자 정보를 찾을 수 없습니다.");
+        }
+    }
+
+
+
+    private static class AuthResponse {
+        private String token;
+        private String userId;
+
+        public AuthResponse(String token, String userId) {
+            this.token = token;
+            this.userId = userId;
+        }
+
+        public String getToken() {
+            return token;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+    }
+
+    private static class FindUsernameRequest {
+        private String email;
+        private String name;
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    private static class FindPasswordRequest {
+        private String userId;
+        private String email;
+        private String name;
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public void setUserId(String userId) {
+            this.userId = userId;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+}

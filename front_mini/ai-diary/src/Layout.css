@@ -1,0 +1,154 @@
+/* src/Layout.css */
+.layout {
+  display: flex;
+  height: 100vh;
+  
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: transparent; /* 배경 투명 */
+  margin-left: 0; /* Navbar width */
+  margin-top: 60px; /* Navbar height */
+}
+
+body {
+  font-family: "EF_Diary", Arial, sans-serif; /* 특정 위치에 폰트 적용 */
+  background-color: #f8f9fa;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden; /* 배경이 화면을 넘지 않도록 */
+}
+
+.navbar {
+  width: 250px; /* 원하는 네비게이션 바 너비 설정 */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  position: fixed; /* fixed로 설정하여 화면에 고정 */
+  top: 0;
+  left: -550px; /* 초기에는 화면 왼쪽에 숨김 */
+  z-index: 3;
+  background-color: rgba(0, 123, 255, 0.9); /* 배경 투명도 조절 */
+  padding-top: 90px;
+  transition: left 0.3s ease-in-out; /* 부드러운 애니메이션 */
+  font-family: "EF_Diary", Arial, sans-serif; /* 특정 위치에 폰트 적용 */
+}
+
+.navbar-visible {
+  left: 0; /* 네비게이션 바가 보이도록 설정 */
+}
+
+.navbar a {
+  margin: 20px 0;
+  text-decoration: none;
+  font-size: 1.2em;
+  color: white;
+}
+
+.navbar a:hover {
+  text-decoration: underline;
+}
+
+.logo-container {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.7); /* 배경 투명도 조절 */
+  z-index: 4;
+  padding: 30px 0;
+}
+
+.logo-title {
+  font-size: 3em;
+  color: #007bff;
+  text-align: center;
+  margin: 0;
+  font-family: "EF_Diary", Arial, sans-serif; /* 특정 위치에 폰트 적용 */
+}
+
+.home-container {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-top: 150px; /* 네비게이션 바와 겹치지 않도록 마진 추가 */
+  
+}
+
+.home-title {
+  font-size: 2.5em;
+  color: #333;
+  margin-bottom: 20px;
+  font-family: "EF_Diary", Arial, sans-serif; /* 특정 위치에 폰트 적용 */
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.styled-link,
+.styled-button {
+  text-decoration: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1.2em;
+  text-align: center;
+  width: 300px;
+  display: inline-block;
+}
+
+.styled-link {
+  background-color: #007bff;
+  font-family: "EF_Diary", Arial, sans-serif; /* 특정 위치에 폰트 적용 */
+}
+
+.styled-link:hover {
+  background-color: #0056b3;
+}
+
+.styled-button {
+  background-color: #dc3545;
+  border: none;
+  cursor: pointer;
+  font-family: "EF_Diary", Arial, sans-serif; /* 특정 위치에 폰트 적용 */
+}
+
+.styled-button:hover {
+  background-color: #c82333;
+}
+
+.home-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  opacity: 0.5; /* 배경 투명도 조절 */
+  pointer-events: none; /* 배경 이미지가 클릭 이벤트를 받지 않도록 설정 */
+}
+
+.navbar-toggle {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  font-size: 3em;
+  cursor: pointer;
+  color: black; /* 햄버거 메뉴 색상 */
+}

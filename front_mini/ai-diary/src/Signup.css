@@ -1,0 +1,121 @@
+/* Signup.css */
+body {
+    font-family: "EF_Diary", Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.signup-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 70%; /* 가로 길이를 더 넓게 설정 */
+    min-width: 600px; /* 최소 가로 길이 */
+    max-width: 1200px; /* 최대 가로 길이 */
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.signup-logo {
+    font-size: 2.5em;
+    color: #007bff;
+    margin-bottom: 50px;
+    font-family: "EF_Diary", Arial, sans-serif;
+    text-align: center;
+}
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+    font-family: "EF_Diary", Arial, sans-serif;
+}
+
+.signup-form label {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.signup-form input {
+    padding: 10px;
+    margin-bottom: 20px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.signup-form button {
+    padding: 15px;
+    background-color: #007bff;
+    color: white;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-family: "EF_Diary", Arial, sans-serif;
+}
+
+.signup-form button:hover {
+    background-color: #0056b3;
+}
+
+.additional-buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 400px;
+}
+
+.additional-buttons button {
+    background-color: transparent;
+    border: 1px solid #007bff;
+    color: #007bff;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.additional-buttons button:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.error-message {
+    color: red;
+    font-size: 1em;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.logo-container {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 4;
+    padding: 20px 0;
+}
+
+.logo-title {
+    font-size: 2em;
+    color: #007bff;
+    text-align: center;
+    margin: 0;
+    font-family: "EF_Diary", Arial, sans-serif;
+}

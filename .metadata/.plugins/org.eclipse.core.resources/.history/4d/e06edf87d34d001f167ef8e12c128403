@@ -1,0 +1,53 @@
+package com.example.AI_Diary.controller;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.example.AI_Diary.model.Comment;
+import com.example.AI_Diary.model.User;
+import com.example.AI_Diary.service.CommentService;
+import com.example.AI_Diary.service.UserService;
+import com.example.AI_Diary.util.JwtTokenUtil;
+
+@RestController
+@RequestMapping("/api/comments")
+@CrossOrigin(origins = "http://localhost:3000")
+public class CommentController {
+    @Autowired
+    private CommentService commentService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @PostMapping
+    public ResponseEntity<Comment> createComment(
+            @RequestBody Comment comment,
+            @RequestHeader("Authorization") String token) {
+        String jwtToken = token.substring(7); // Bearer 토큰 제거
+        String userId = jwtTokenUtil.getUsernameFromToken(jwtToken);
+        User user = userService.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        comment.setUser(user);
+        comment.setCreatedAt(LocalDateTime.now()); // 현재 시간과 날짜 설정
+        return ResponseEntity.ok(commentService.saveComment(comment));
+    }
+
+    @GetMapping("/diary/{diaryId}")
+    public ResponseEntity<List<Comment>> getCommentsByDiary(@PathVariable Long diaryId) {
+        return ResponseEntity.ok(commentService.findByDiaryId(diaryId));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
+        commentService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+}

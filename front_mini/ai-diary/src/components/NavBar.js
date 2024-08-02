@@ -1,28 +1,45 @@
-// Navbar.js
-import React from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import "../NavBar.css";
 
 const Navbar = () => {
+  const { user, logout } = useContext(AuthContext);
+  const [navbarVisible, setNavbarVisible] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const toggleNavbar = () => {
+    setNavbarVisible(!navbarVisible);
+  };
+
   return (
-    <nav>
-      <ul>
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-        <li>
-          <Link to="/signup">Sign Up</Link>
-        </li>
-        <li>
-          <Link to="/login">Login</Link>
-        </li>
-        <li>
-          <Link to="/create-diary">Create Diary</Link>
-        </li>
-        <li>
-          <Link to="/diaries">Diary List</Link>
-        </li>
-      </ul>
-    </nav>
+    <>
+      <div className="navbar-toggle" onClick={toggleNavbar}>
+        &#9776;
+      </div>
+      <div className={`navbar ${navbarVisible ? "navbar-visible" : ""}`}>
+        <Link to="/">메인 홈</Link>
+        {user ? (
+          <>
+            <Link to="/create-diary">일기 작성하기</Link>
+            <Link to="/diaries">내 일기 목록</Link>
+            <Link to="/search">태그 찾기</Link>
+            <Link to="/mypage">마이 페이지</Link>
+            <button className="logout-button" onClick={handleLogout}>
+              로그아웃
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/signup">회원 가입</Link>
+            <Link to="/login">로그인</Link>
+          </>
+        )}
+      </div>
+    </>
   );
 };
 

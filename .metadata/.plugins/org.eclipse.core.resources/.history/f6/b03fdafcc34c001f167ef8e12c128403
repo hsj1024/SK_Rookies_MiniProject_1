@@ -1,0 +1,26 @@
+package com.example.AI_Diary.repository;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.example.AI_Diary.model.User;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsernameOrEmail(String username, String email);
+
+    Optional<User> findByUserId(String userId);
+
+    Optional<User> findByEmailAndName(String email, String name); // 이메일과 이름으로 사용자 찾기
+    
+    Optional<User> findByUsernameAndEmail(String username, String email); // 사용자 이름과 이메일로 사용자 찾기
+    
+    Optional<User> findByEmailAndUsername(String email, String username);
+
+}

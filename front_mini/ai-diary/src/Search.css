@@ -1,0 +1,65 @@
+.search-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 40px;
+    background: rgb(255, 255, 255);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-family: "EF_Diary", Arial, sans-serif;
+}
+
+.search-title {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+.search-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "EF_Diary", Arial, sans-serif;
+}
+
+.search-label {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.search-input-container {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px 0 0 5px;
+    box-sizing: border-box;
+    font-family: "EF_Diary", Arial, sans-serif;
+    margin-right: 7px; /* 버튼과의 간격 */
+}
+
+.search-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5 5px 5px 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: "EF_Diary", Arial, sans-serif;
+    height: 100%; /* 검색 창과 같은 높이로 */
+}
+
+.search-button:hover {
+    background-color: #0056b3;
+}
