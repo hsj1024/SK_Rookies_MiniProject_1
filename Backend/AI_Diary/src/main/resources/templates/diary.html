@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Diary</title>
+</head>
+<body>
+    <h1>My Diary</h1>
+    <form th:action="@{/diary}" method="post">
+        <input type="text" name="title" placeholder="Title" required />
+        <textarea name="content" placeholder="Content" required></textarea>
+        <button type="submit">Add Entry</button>
+    </form>
+    <div>
+        <h2>Entries</h2>
+        <div th:each="entry : ${entries}">
+            <h3 th:text="${entry.title}">Title</h3>
+            <p th:text="${entry.content}">Diary entry</p>
+            <p th:text="${entry.emotion}">Emotion</p>
+            <p th:text="${entry.createdAt}">Created At</p>
+        </div>
+    </div>
+    <form th:action="@{/logout}" method="post">
+        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+        <button type="submit">Logout</button>
+    </form>
+</body>
+</html>

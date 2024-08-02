@@ -1,8 +1,0 @@
-@Controller
-public class LoginController {
-
-    @GetMapping("/login")
-    public String showLoginPage() {
-        return "login"; // 명시적으로 "login" 뷰를 반환
-    }
-}

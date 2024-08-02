@@ -8,6 +8,16 @@
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
+			<item value="doc"/>
+			<item value="getimage"/>
+			<item value="index"/>
+			<item value="64"/>
+			<item value="change"/>
+			<item value="null"/>
+			<item value="tag"/>
+			<item value="image"/>
+			<item value="mysql"/>
+			<item value="jwtToken"/>
 			<item value="mail"/>
 			<item value="tomcat"/>
 		</list>
