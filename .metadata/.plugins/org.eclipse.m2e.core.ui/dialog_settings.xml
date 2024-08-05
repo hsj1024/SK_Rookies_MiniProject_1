@@ -2,6 +2,7 @@
 <section name="Workbench">
 	<section name="MavenProjectImportWizardPage">
 		<list key="rootDirectory">
+			<item value="/Users/seojeong/Documents/GitHub/rookies_mini_1/Backend/AI_Diary"/>
 			<item value="/Users/seojeong/Downloads/AI_Diary"/>
 		</list>
 		<list key="projectNameTemplate">
